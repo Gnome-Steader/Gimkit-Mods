@@ -16383,94 +16383,100 @@
 		let highlightTeammates = false;
 		let highlightEnemies = false;
 
-		function render() {
-			if (!serializer?.state?.characters || !ctx) return;
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			if (!highlightTeammates && !highlightEnemies) return;
-			let camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
-			let player = serializer.state.characters.$items.get($playerId);
-			if (!player || !camera) return;
-			let camX = camera.midPoint.x;
-			let camY = camera.midPoint.y;
+function render() {
+    if (!serializer?.state?.characters || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!highlightTeammates && !highlightEnemies) return;
+    let camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
+    let player = serializer.state.characters.$items.get($playerId);
+    if (!player || !camera) return;
+    let camX = camera.midPoint.x;
+    let camY = camera.midPoint.y;
 
-			for (let [id, character] of serializer.state.characters.$items) {
-				if (id === $playerId) continue;
-				let isTeammate = player.teamId === character.teamId;
-				if (isTeammate && !highlightTeammates) continue;
-				if (!isTeammate && !highlightEnemies) continue;
+    for (let [id, character] of serializer.state.characters.$items) {
+        if (id === $playerId) continue;
+        let isTeammate = player.teamId === character.teamId;
+        if (isTeammate && !highlightTeammates) continue;
+        if (!isTeammate && !highlightEnemies) continue;
 
-				// get the angle between the player and the character
-				let angle = Math.atan2(character.y - camY, character.x - camX);
+        // get the angle between the player and the character
+        let angle = Math.atan2(character.y - camY, character.x - camX);
 
-				let distance = Math.sqrt(Math.pow(character.x - camX, 2) + Math.pow(character.y - camY, 2)) * camera.zoom;
-				let arrowDist = Math.min(250, distance);
-				let arrowTipX = Math.cos(angle) * arrowDist + canvas.width / 2;
-				let arrowTipY = Math.sin(angle) * arrowDist + canvas.height / 2;
-				let leftAngle = angle + Math.PI / 4 * 3;
-				let rightAngle = angle - Math.PI / 4 * 3;
+        let distance = Math.sqrt(Math.pow(character.x - camX, 2) + Math.pow(character.y - camY, 2)) * camera.zoom;
+        let arrowDist = Math.min(250, distance);
+        let arrowTipX = Math.cos(angle) * arrowDist + canvas.width / 2;
+        let arrowTipY = Math.sin(angle) * arrowDist + canvas.height / 2;
+        let leftAngle = angle + Math.PI / 4 * 3;
+        let rightAngle = angle - Math.PI / 4 * 3;
 
-				// draw an arrow pointing to the character
-				ctx.beginPath();
+        // draw an arrow pointing to the character
+        ctx.beginPath();
 
-				ctx.moveTo(arrowTipX, arrowTipY);
-				ctx.lineTo(arrowTipX + Math.cos(leftAngle) * 50, arrowTipY + Math.sin(leftAngle) * 50);
-				ctx.moveTo(arrowTipX, arrowTipY);
-				ctx.lineTo(arrowTipX + Math.cos(rightAngle) * 50, arrowTipY + Math.sin(rightAngle) * 50);
-				ctx.lineWidth = 3;
-				ctx.strokeStyle = isTeammate ? "green" : "red";
-				ctx.stroke();
+        ctx.moveTo(arrowTipX, arrowTipY);
+        ctx.lineTo(arrowTipX + Math.cos(leftAngle) * 50, arrowTipY + Math.sin(leftAngle) * 50);
+        ctx.moveTo(arrowTipX, arrowTipY);
+        ctx.lineTo(arrowTipX + Math.cos(rightAngle) * 50, arrowTipY + Math.sin(rightAngle) * 50);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = isTeammate ? "green" : "red";
+        ctx.stroke();
 
-				// draw the character's name and distance
-				ctx.fillStyle = "black";
+        // draw the character's name and distance
+        ctx.fillStyle = "black";
 
-				ctx.font = "20px Verdana";
-				ctx.textAlign = "center";
-				ctx.textBaseline = "middle";
-				ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
-			}
-		}
+        ctx.font = "20px Verdana";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
 
-		onMount(() => {
-			document.body.appendChild(canvas);
-		});
+        // draw a line from the middle of the screen to the arrow tip
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, canvas.height / 2);
+        ctx.lineTo(arrowTipX, arrowTipY);
+        ctx.strokeStyle = isTeammate ? "green" : "red";
+        ctx.stroke();
+    }
+}
 
-		setInterval(render, 1000 / 30);
+onMount(() => {
+    document.body.appendChild(canvas);
+});
 
-		function canvas_1_binding($$value) {
-			binding_callbacks[$$value ? 'unshift' : 'push'](() => {
-				canvas = $$value;
-				$$invalidate(0, canvas);
-			});
-		}
+setInterval(render, 1000 / 30);
 
-		function togglebutton0_enabled_binding(value) {
-			highlightTeammates = value;
-			$$invalidate(1, highlightTeammates);
-		}
+function canvas_1_binding($$value) {
+    binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+        canvas = $$value;
+        $$invalidate(0, canvas);
+    });
+}
 
-		function togglebutton1_enabled_binding(value) {
-			highlightEnemies = value;
-			$$invalidate(2, highlightEnemies);
-		}
+function togglebutton0_enabled_binding(value) {
+    highlightTeammates = value;
+    $$invalidate(1, highlightTeammates);
+}
 
-		$$self.$$.update = () => {
-			if ($$self.$$.dirty & /*canvas*/ 1) {
-				ctx = canvas?.getContext("2d");
-			}
-		};
+function togglebutton1_enabled_binding(value) {
+    highlightEnemies = value;
+    $$invalidate(2, highlightEnemies);
+}
 
-		return [
-			canvas,
-			highlightTeammates,
-			highlightEnemies,
-			onResize,
-			render,
-			canvas_1_binding,
-			togglebutton0_enabled_binding,
-			togglebutton1_enabled_binding
-		];
-	}
+$$self.$$.update = () => {
+    if ($$self.$$.dirty & /*canvas*/ 1) {
+        ctx = canvas?.getContext("2d");
+    }
+};
 
+return [
+    canvas,
+    highlightTeammates,
+    highlightEnemies,
+    onResize,
+    render,
+    canvas_1_binding,
+    togglebutton0_enabled_binding,
+    togglebutton1_enabled_binding
+];
+}
 	class PlayerHighlighter extends SvelteComponent {
 		constructor(options) {
 			super();
