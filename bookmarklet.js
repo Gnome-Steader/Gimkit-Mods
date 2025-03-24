@@ -16390,8 +16390,12 @@ function render() {
     let camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
     let player = serializer.state.characters.$items.get($playerId);
     if (!player || !camera) return;
+
     let camX = camera.midPoint.x;
     let camY = camera.midPoint.y;
+
+    let centerX = canvas.width / 2;
+    let centerY = canvas.height / 2;
 
     for (let [id, character] of serializer.state.characters.$items) {
         if (id === $playerId) continue;
@@ -16400,12 +16404,12 @@ function render() {
         if (!isTeammate && !highlightEnemies) continue;
 
         // get the angle between the player and the character
-        let angle = Math.atan2(character.y - camY, character.x - camX);
+        let angle = Math.atan2(character.y - player.y, character.x - player.x);
 
-        let distance = Math.sqrt(Math.pow(character.x - camX, 2) + Math.pow(character.y - camY, 2)) * camera.zoom;
+        let distance = Math.sqrt(Math.pow(character.x - player.x, 2) + Math.pow(character.y - player.y, 2)) * camera.zoom;
         let arrowDist = Math.min(250, distance);
-        let arrowTipX = Math.cos(angle) * arrowDist + canvas.width / 2;
-        let arrowTipY = Math.sin(angle) * arrowDist + canvas.height / 2;
+        let arrowTipX = Math.cos(angle) * arrowDist + centerX;
+        let arrowTipY = Math.sin(angle) * arrowDist + centerY;
         let leftAngle = angle + Math.PI / 4 * 3;
         let rightAngle = angle - Math.PI / 4 * 3;
 
@@ -16430,7 +16434,7 @@ function render() {
 
         // draw a line from the middle of the screen to the arrow tip
         ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, canvas.height / 2);
+        ctx.moveTo(centerX, centerY);
         ctx.lineTo(arrowTipX, arrowTipY);
         ctx.strokeStyle = isTeammate ? "green" : "red";
         ctx.stroke();
