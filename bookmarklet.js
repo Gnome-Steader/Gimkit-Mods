@@ -16382,7 +16382,6 @@
 
 		let highlightTeammates = false;
 		let highlightEnemies = false;
-
 function render() {
     if (!serializer?.state?.characters || !ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -21909,12 +21908,12 @@ return [
 			}
 		};
 	}
-
+//hot-key
 	function instance($$self, $$props, $$invalidate) {
 		let $showHud;
 		component_subscribe($$self, showHud, $$value => $$invalidate(0, $showHud = $$value));
 
-		keybindManager.addKeybind(new Set(["\\"]), () => {
+		keybindManager.addKeybind(new Set([""]), () => {
 			showHud.update(v => !v);
 		});
 
