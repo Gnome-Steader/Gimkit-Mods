@@ -21913,7 +21913,7 @@ return [
 		let $showHud;
 		component_subscribe($$self, showHud, $$value => $$invalidate(0, $showHud = $$value));
 
-		keybindManager.addKeybind(new Set(["``"]), () => {
+		keybindManager.addKeybind(new Set(["`"]), () => {
 			showHud.update(v => !v);
 		});
 
