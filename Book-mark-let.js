@@ -16385,58 +16385,68 @@
 		let highlightEnemies = false;
 
 		function render() {
-			if (!serializer?.state?.characters || !ctx) return;
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			if (!highlightTeammates && !highlightEnemies) return;
-			let camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
-			let player = serializer.state.characters.$items.get($playerId);
-			if (!player || !camera) return;
-			let camX = camera.midPoint.x;
-			let camY = camera.midPoint.y;
+    if (!serializer?.state?.characters || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!highlightTeammates && !highlightEnemies) return;
+    let camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
+    let player = serializer.state.characters.$items.get($playerId);
+    if (!player || !camera) return;
 
-			for (let [id, character] of serializer.state.characters.$items) {
-				if (id === $playerId) continue;
-				let isTeammate = player.teamId === character.teamId;
-				if (isTeammate && !highlightTeammates) continue;
-				if (!isTeammate && !highlightEnemies) continue;
+    let camX = camera.midPoint.x;
+    let camY = camera.midPoint.y;
 
-				// get the angle between the player and the character
-				let angle = Math.atan2(character.y - camY, character.x - camX);
+    let centerX = canvas.width / 2;
+    let centerY = canvas.height / 2;
 
-				let distance = Math.sqrt(Math.pow(character.x - camX, 2) + Math.pow(character.y - camY, 2)) * camera.zoom;
-				let arrowDist = Math.min(250, distance);
-				let arrowTipX = Math.cos(angle) * arrowDist + canvas.width / 2;
-				let arrowTipY = Math.sin(angle) * arrowDist + canvas.height / 2;
-				let leftAngle = angle + Math.PI / 4 * 3;
-				let rightAngle = angle - Math.PI / 4 * 3;
+    for (let [id, character] of serializer.state.characters.$items) {
+        if (id === $playerId) continue;
+        let isTeammate = player.teamId === character.teamId;
+        if (isTeammate && !highlightTeammates) continue;
+        if (!isTeammate && !highlightEnemies) continue;
 
-				// draw an arrow pointing to the character
-				ctx.beginPath();
+        // get the angle between the player and the character
+        let angle = Math.atan2(character.y - player.y, character.x - player.x);
 
-				ctx.moveTo(arrowTipX, arrowTipY);
-				ctx.lineTo(arrowTipX + Math.cos(leftAngle) * 50, arrowTipY + Math.sin(leftAngle) * 50);
-				ctx.moveTo(arrowTipX, arrowTipY);
-				ctx.lineTo(arrowTipX + Math.cos(rightAngle) * 50, arrowTipY + Math.sin(rightAngle) * 50);
-				ctx.lineWidth = 3;
-				ctx.strokeStyle = isTeammate ? "green" : "red";
-				ctx.stroke();
+        let distance = Math.sqrt(Math.pow(character.x - player.x, 2) + Math.pow(character.y - player.y, 2)) * camera.zoom;
+        let arrowDist = Math.min(250, distance);
+        let arrowTipX = Math.cos(angle) * arrowDist + centerX;
+        let arrowTipY = Math.sin(angle) * arrowDist + centerY;
+        let leftAngle = angle + Math.PI / 4 * 3;
+        let rightAngle = angle - Math.PI / 4 * 3;
 
-				// draw the character's name and distance
-				ctx.fillStyle = "black";
+        // draw an arrow pointing to the character
+        ctx.beginPath();
 
-				ctx.font = "20px Verdana";
-				ctx.textAlign = "center";
-				ctx.textBaseline = "middle";
-				ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
-			}
-		}
+        ctx.moveTo(arrowTipX, arrowTipY);
+        ctx.lineTo(arrowTipX + Math.cos(leftAngle) * 50, arrowTipY + Math.sin(leftAngle) * 50);
+        ctx.moveTo(arrowTipX, arrowTipY);
+        ctx.lineTo(arrowTipX + Math.cos(rightAngle) * 50, arrowTipY + Math.sin(rightAngle) * 50);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = isTeammate ? "green" : "red";
+        ctx.stroke();
 
-		onMount(() => {
-			document.body.appendChild(canvas);
-		});
+        // draw the character's name and distance
+        ctx.fillStyle = "black";
 
-		setInterval(render, 1000 / 30);
+        ctx.font = "20px Verdana";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
 
+        // draw a line from the middle of the screen to the arrow tip
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(arrowTipX, arrowTipY);
+        ctx.strokeStyle = isTeammate ? "green" : "red";
+        ctx.stroke();
+    }
+}
+
+onMount(() => {
+    document.body.appendChild(canvas);
+});
+
+setInterval(render, 1000 / 30);
 		function canvas_1_binding($$value) {
 			binding_callbacks[$$value ? 'unshift' : 'push'](() => {
 				canvas = $$value;
@@ -21900,12 +21910,12 @@
 			}
 		};
 	}
-
+//hotkeeey
 	function instance($$self, $$props, $$invalidate) {
 		let $showHud;
 		component_subscribe($$self, showHud, $$value => $$invalidate(0, $showHud = $$value));
 
-		keybindManager.addKeybind(new Set(["\\"]), () => {
+		keybindManager.addKeybind(new Set(["`"]), () => {
 			showHud.update(v => !v);
 		});
 
