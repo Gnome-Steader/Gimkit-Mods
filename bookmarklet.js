@@ -2,6 +2,86 @@
 	'use strict';
 
 	/** @returns {void} */
+	function addStyles() {
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = `
+      .svelte-1byew0x {
+        display: block;
+        font-family: 'Arial', sans-serif;
+        font-size: 14px;
+      }
+      .menu {
+        position: absolute;
+        border: 1px solid #ccc;
+        background: #fff;
+        z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .header {
+        font-weight: bold;
+        padding: 12px;
+        border-bottom: 1px solid #ccc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .children {
+        padding: 12px;
+      }
+      .wrap {
+        margin-bottom: 12px;
+      }
+      button {
+        display: inline-block;
+        padding: 8px 16px;
+        margin: 6px 0;
+        border: 1px solid #ccc;
+        background: #f5f5f5;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background 0.3s, transform 0.2s;
+      }
+      button:hover {
+        background: #e0e0e0;
+        transform: translateY(-2px);
+      }
+      .colorPicker {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 12px;
+      }
+      .inputs {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .opacityBlock {
+        display: flex;
+        align-items: center;
+      }
+      input[type="range"] {
+        margin-left: 12px;
+        flex: 1;
+      }
+      input[type="color"] {
+        margin-left: 12px;
+      }
+      .preview {
+        margin-left: 12px;
+        width: 24px;
+        height: 24px;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Add styles when the script runs
+  addStyles();
 	function noop() {}
 
 	/**
