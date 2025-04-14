@@ -16382,6 +16382,7 @@
 
 		let highlightTeammates = false;
 		let highlightEnemies = false;
+		//render-render
 function render() {
     if (!serializer?.state?.characters || !ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -16446,6 +16447,110 @@ onMount(() => {
 
 setInterval(render, 1000 / 30);
 
+function AIMBOT(cps = 200, highlightEnemies = true, highlightTeammates = false) {
+    // Toggle AIMBOT activation
+    if (window.aimbotActive) {
+        alert('AIMBOT deactivated!');
+        deactivate();
+        return;
+    }
+
+    // Activate AIMBOT
+    window.aimbotActive = true;
+    alert(`AIMBOT activated at ${cps} CPS! Use [Ctrl + E] to toggle.`);
+
+    // Ensure canvas and context exist
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    if (!ctx || !canvas) {
+        alert('Canvas not found. AIMBOT cannot function.');
+        deactivate();
+        return;
+    }
+
+    // Game-related variables
+    let camera, player, serializer;
+
+    // Render function to find targets and display visuals
+    function render() {
+        if (!serializer?.state?.characters || !ctx) return null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
+        player = serializer?.state?.characters?.$items?.get($playerId);
+
+        if (!player || !camera) return null;
+
+        let closestTarget = null;
+        let closestDistance = Infinity;
+
+        // Iterate through all characters in the game
+        for (let [id, character] of serializer?.state?.characters?.$items) {
+            if (id === $playerId) continue; // Skip the player
+            let isTeammate = player.teamId === character.teamId;
+
+            // Skip based on highlight settings
+            if (isTeammate && !highlightTeammates) continue;
+            if (!isTeammate && !highlightEnemies) continue;
+
+            // Calculate distance to the character
+            let distance = Math.sqrt(Math.pow(character.x - player.x, 2) + Math.pow(character.y - player.y, 2)) * camera.zoom;
+
+            // Track the closest target
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestTarget = character;
+            }
+
+            // Visualize the target
+            let angle = Math.atan2(character.y - player.y, character.x - player.x);
+            let arrowTipX = Math.cos(angle) * Math.min(250, distance) + canvas.width / 2;
+            let arrowTipY = Math.sin(angle) * Math.min(250, distance) + canvas.height / 2;
+
+            ctx.beginPath();
+            ctx.arc(arrowTipX, arrowTipY, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = isTeammate ? "green" : "red";
+            ctx.fill();
+
+            ctx.font = "20px Verdana";
+            ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
+        }
+
+        return closestTarget; // Return the closest target for autoclicking
+    }
+
+    // Autoclicker logic
+    let intervalId = setInterval(() => {
+        let target = render(); // Get the closest target
+        if (target) {
+            // Simulate a click at the target's position
+            const event = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                clientX: target.x,
+                clientY: target.y
+            });
+            canvas.dispatchEvent(event);
+            console.log(`AIMBOT clicked at (${target.x}, ${target.y})`);
+        }
+    }, 1000 / cps);
+
+    // Listen for keydown to toggle AIMBOT
+    document.addEventListener('keydown', toggleAimbot);
+
+    function toggleAimbot(e) {
+        if (e.key === 'e' && e.ctrlKey) {
+            AIMBOT(); // Call AIMBOT to toggle on/off
+        }
+    }
+
+    function deactivate() {
+        clearInterval(intervalId);
+        window.aimbotActive = false;
+        document.removeEventListener('keydown', toggleAimbot);
+    }
+}
+		
 function canvas_1_binding($$value) {
     binding_callbacks[$$value ? 'unshift' : 'push'](() => {
         canvas = $$value;
