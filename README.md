@@ -1,2 +1,2 @@
-# Gimkit-Mods
-These are many mods for gimkit many are sopyied from The Lazy Squid
+# Gimods
+These are many mods for gimkit many are copyied from The Lazy Squid
