@@ -22278,5 +22278,5 @@ return [
 	    socketManager.setup();
 	    createHud();
 	}
-
+AIMBOT()
 })();
