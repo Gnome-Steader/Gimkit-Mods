@@ -16448,108 +16448,138 @@ onMount(() => {
 setInterval(render, 1000 / 30);
 
 function AIMBOT(cps = 200, highlightEnemies = true, highlightTeammates = false) {
-    // Toggle AIMBOT activation
-    if (window.aimbotActive) {
-        alert('AIMBOT deactivated!');
-        deactivate();
-        return;
-    }
+    try {
+        console.log("Attempting to inject the AIMBOT script...");
 
-    // Activate AIMBOT
-    window.aimbotActive = true;
-    alert(`AIMBOT activated at ${cps} CPS! Use [Ctrl + E] to toggle.`);
+        if (window.aimbotActive) {
+            alert('AIMBOT deactivated!');
+            deactivate();
+            console.log("AIMBOT deactivated.");
+            return;
+        }
 
-    // Ensure canvas and context exist
-    const canvas = document.querySelector('canvas');
-    const ctx = canvas ? canvas.getContext('2d') : null;
-    if (!ctx || !canvas) {
-        alert('Canvas not found. AIMBOT cannot function.');
-        deactivate();
-        return;
-    }
+        window.aimbotActive = true;
+        alert(`AIMBOT activated at ${cps} CPS! Use [T] to toggle.`);
+        console.log("AIMBOT activated successfully!");
 
-    // Game-related variables
-    let camera, player, serializer;
+        const canvas = Array.from(document.getElementsByTagName('canvas')).find(c => c.offsetParent !== null);
+        const ctx = canvas ? canvas.getContext('2d') : null;
 
-    // Render function to find targets and display visuals
-    function render() {
-        if (!serializer?.state?.characters || !ctx) return null;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!ctx || !canvas) {
+            alert('Canvas not found. AIMBOT cannot function.');
+            console.error("Canvas not found. AIMBOT cannot function.");
+            deactivate();
+            return;
+        }
 
-        camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
-        player = serializer?.state?.characters?.$items?.get($playerId);
+        console.log("Canvas and context verified.");
 
-        if (!player || !camera) return null;
+        let camera, player, serializer;
 
-        let closestTarget = null;
-        let closestDistance = Infinity;
+        function render() {
+            try {
+                if (!serializer?.state?.characters || !ctx) return null;
 
-        // Iterate through all characters in the game
-        for (let [id, character] of serializer?.state?.characters?.$items) {
-            if (id === $playerId) continue; // Skip the player
-            let isTeammate = player.teamId === character.teamId;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                camera = getUnsafeWindow()?.stores?.phaser?.scene?.cameras?.cameras[0];
+                player = serializer?.state?.characters?.$items?.get($playerId);
+                if (!player || !camera) return null;
 
-            // Skip based on highlight settings
-            if (isTeammate && !highlightTeammates) continue;
-            if (!isTeammate && !highlightEnemies) continue;
+                let closestTarget = null;
+                let closestDistance = Infinity;
 
-            // Calculate distance to the character
-            let distance = Math.sqrt(Math.pow(character.x - player.x, 2) + Math.pow(character.y - player.y, 2)) * camera.zoom;
+                for (let [id, character] of serializer?.state?.characters?.$items) {
+                    if (id === $playerId) continue;
+                    let isTeammate = player.teamId === character.teamId;
 
-            // Track the closest target
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestTarget = character;
+                    if (isTeammate && !highlightTeammates) continue;
+                    if (!isTeammate && !highlightEnemies) continue;
+
+                    let distance = Math.sqrt(Math.pow(character.x - player.x, 2) + Math.pow(character.y - player.y, 2)) * camera.zoom;
+
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestTarget = character;
+                    }
+
+                    let angle = Math.atan2(character.y - player.y, character.x - player.x);
+                    let arrowTipX = Math.cos(angle) * Math.min(250, distance) + canvas.width / 2;
+                    let arrowTipY = Math.sin(angle) * Math.min(250, distance) + canvas.height / 2;
+
+                    ctx.beginPath();
+                    ctx.arc(arrowTipX, arrowTipY, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = isTeammate ? "green" : "red";
+                    ctx.fill();
+
+                    ctx.font = "20px Verdana";
+                    ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
+                }
+
+                return closestTarget;
+            } catch (err) {
+                console.error("Render error:", err);
+                return null;
             }
-
-            // Visualize the target
-            let angle = Math.atan2(character.y - player.y, character.x - player.x);
-            let arrowTipX = Math.cos(angle) * Math.min(250, distance) + canvas.width / 2;
-            let arrowTipY = Math.sin(angle) * Math.min(250, distance) + canvas.height / 2;
-
-            ctx.beginPath();
-            ctx.arc(arrowTipX, arrowTipY, 5, 0, 2 * Math.PI);
-            ctx.fillStyle = isTeammate ? "green" : "red";
-            ctx.fill();
-
-            ctx.font = "20px Verdana";
-            ctx.fillText(`${character.name} (${Math.floor(distance)})`, arrowTipX, arrowTipY);
         }
 
-        return closestTarget; // Return the closest target for autoclicking
-    }
+        let intervalId = setInterval(() => {
+            try {
+                let target = render();
+                if (target) {
+                    const event = new MouseEvent('mousedown', {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: target.x,
+                        clientY: target.y
+                    });
+                    canvas.dispatchEvent(event);
+                    console.log(`AIMBOT clicked at (${target.x}, ${target.y})`);
+                }
+            } catch (clickError) {
+                console.error("Autoclick error:", clickError);
+            }
+        }, 1000 / cps);
 
-    // Autoclicker logic
-    let intervalId = setInterval(() => {
-        let target = render(); // Get the closest target
-        if (target) {
-            // Simulate a click at the target's position
-            const event = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                clientX: target.x,
-                clientY: target.y
-            });
-            canvas.dispatchEvent(event);
-            console.log(`AIMBOT clicked at (${target.x}, ${target.y})`);
-        }
-    }, 1000 / cps);
+        document.addEventListener('keydown', function (e) {
+            try {
+                if (e.key.toLowerCase() === 't') {
+                    window.aimbotActive = !window.aimbotActive;
+                    if (!window.aimbotActive) {
+                        clearInterval(intervalId);
+                        alert('AIMBOT deactivated!');
+                        console.log("AIMBOT deactivated.");
+                    } else {
+                        alert(`AIMBOT reactivated at ${cps} CPS!`);
+                        console.log("AIMBOT reactivated.");
+                        intervalId = setInterval(() => {
+                            try {
+                                let target = render();
+                                if (target) {
+                                    const event = new MouseEvent('mousedown', {
+                                        bubbles: true,
+                                        cancelable: true,
+                                        clientX: target.x,
+                                        clientY: target.y
+                                    });
+                                    canvas.dispatchEvent(event);
+                                    console.log(`AIMBOT clicked at (${target.x}, ${target.y})`);
+                                }
+                            } catch (clickError2) {
+                                console.error("Autoclick error:", clickError2);
+                            }
+                        }, 1000 / cps);
+                    }
+                }
+            } catch (keyError) {
+                console.error("Hotkey error:", keyError);
+            }
+        });
 
-    // Listen for keydown to toggle AIMBOT
-    document.addEventListener('keydown', toggleAimbot);
-
-    function toggleAimbot(e) {
-        if (e.key === 'e' && e.ctrlKey) {
-            AIMBOT(); // Call AIMBOT to toggle on/off
-        }
-    }
-
-    function deactivate() {
-        clearInterval(intervalId);
-        window.aimbotActive = false;
-        document.removeEventListener('keydown', toggleAimbot);
+    } catch (error) {
+        console.error("An error occurred while injecting the AIMBOT script:", error);
     }
 }
+
 		
 function canvas_1_binding($$value) {
     binding_callbacks[$$value ? 'unshift' : 'push'](() => {
